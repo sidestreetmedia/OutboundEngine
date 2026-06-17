@@ -18,7 +18,7 @@ use App\Services\Outbound\InstantlyProvider;
 use App\Services\Outbound\LemlistProvider;
 use App\Services\Outbound\OutboundManager;
 use App\Services\Settings\Settings;
-use App\Services\Verification\NullVerifier;
+use App\Services\Verification\MxVerifier;
 use Illuminate\Support\ServiceProvider;
 
 /**
@@ -56,8 +56,9 @@ class OutboundServiceProvider extends ServiceProvider
             );
         });
 
-        // Verifier: stub until Phase 3.
-        $this->app->bind(EmailVerifier::class, NullVerifier::class);
+        // Verifier: free MX/syntax verification by default (no spend, no config).
+        // A paid provider (OE_VERIFY_PROVIDER + key) can layer on top later.
+        $this->app->bind(EmailVerifier::class, MxVerifier::class);
 
         // Sending platforms: both built behind one manager, keys via settings.
         $this->app->singleton(OutboundManager::class, function ($app): OutboundManager {
