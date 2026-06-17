@@ -82,6 +82,12 @@ class Lead extends Model
         return $this->hasMany(Message::class)->orderBy('position');
     }
 
+    /** @return HasMany<Reply, $this> */
+    public function replies(): HasMany
+    {
+        return $this->hasMany(Reply::class);
+    }
+
     /**
      * Record a verification result and move the lead's status accordingly.
      */
