@@ -44,13 +44,17 @@ Week one is not ten replies. Warmup and a few iteration cycles come first; the r
 
 | Phase | What lands | Status |
 |------:|------------|--------|
-| 1 | Foundation — skeleton, Docker stack, base schema, config | 🛠 in progress |
-| 2 | Product Brain — uploads, URL ingest, profile builder, persona/OKR/value-prop library | — |
-| 3 | Lead pipeline — CSV import, dedupe, verify, enrich, triggers | — |
-| 4 | Personalization — sequence engine, AI step copy, guardrails, human review queue | — |
-| 5 | Proof assets — per-prospect landing pages, public-presence audit + report | — |
-| 6 | Sync — Instantly + Lemlist adapters, reply/bounce ingest, reply classifier, compliance | — |
-| 7 | Experiments + dashboard — variant generator, segment optimization, funnel view | — |
+| 1 | Foundation — skeleton, Docker stack, base schema, config | ✅ done |
+| 2 | Product Brain — uploads, URL ingest, profile builder, persona/OKR/value-prop library | ✅ done |
+| 3 | Lead pipeline — CSV import, dedupe, verify | ✅ core done¹ |
+| 4 | Personalization — sequence engine, AI step copy, guardrails, human review queue | 🛠 in progress |
+| 5 | Proof assets — per-prospect landing pages, public-presence audit + report | ◻ planned |
+| 6 | Sync — Instantly + Lemlist adapters, reply/bounce ingest, reply classifier, compliance | ◻ planned |
+| 7 | Experiments + dashboard — variant generator, segment optimization, funnel view | ◻ planned |
+
+Plus a **settings page** (`/settings`) for entering and storing API keys and configuration.
+
+¹ Enrichment and trigger detection need paid external data (Apollo, firmographic/news APIs), so they ship with the Apollo increment rather than as free stubs — consistent with the no-autonomous-spend rule.
 
 Apollo as an automatic lead source and bandit auto-optimization follow as their own increments once the core loop is running.
 
@@ -71,6 +75,41 @@ Notes:
 - First boot is slow — the image builds and `composer install` runs once. The `queue` and `scheduler` containers wait for that to finish before starting, so a few seconds of "waiting" in the logs is expected.
 - `vendor/`, `node_modules/`, and `.env` are never committed or baked into the image.
 - The same `Dockerfile` produces a standalone image for deploying anywhere — no local-only assumptions.
+
+## Configuration & keys
+
+API keys and integration settings can be entered two ways:
+
+- **Settings page** — visit `/settings`, enter your keys (Anthropic, Instantly, Lemlist, verification, Apollo). Secrets are encrypted at rest with your `APP_KEY`; a saved value overrides the matching `.env` entry.
+- **`.env`** — set `ANTHROPIC_API_KEY`, `INSTANTLY_API_KEY`, etc. directly. The settings page falls back to these when nothing is saved.
+- **CLI** — `php artisan settings:set anthropic_api_key sk-ant-...` and `php artisan settings:list`.
+
+The brain and copy generation need an Anthropic key; everything else (ingestion, CSV import, MX verification) runs with no keys and no spend.
+
+## Usage
+
+The pipeline is driven by Artisan commands today; the dashboard arrives in Phase 7.
+
+**Product Brain**
+
+```bash
+php artisan product:create "Web Care" --one-liner="Done-for-you website maintenance"
+php artisan product:ingest web-care ~/decks/web-care.pdf      # PDF, docx, txt, html
+php artisan product:ingest-url web-care https://hellosidestreet.com
+php artisan product:build-brain web-care                       # sources → structured profile
+php artisan product:build-library web-care                     # profile → personas + value props
+php artisan product:list
+```
+
+**Lead pipeline**
+
+```bash
+php artisan leads:import ~/exports/prospects.csv --campaign=web-care   # normalize, dedupe, derive domain
+php artisan leads:verify                                               # syntax + MX/A, no spend
+php artisan leads:stats
+```
+
+Only `verified` leads are eligible to be contacted — invalid, risky, and unverified addresses never go out.
 
 ## License
 
