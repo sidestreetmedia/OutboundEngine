@@ -2,6 +2,25 @@
 
 Progress log for OutboundEngine, by phase. Newest first.
 
+## Phase 5 — Proof assets (done)
+
+Real, genuine proof — assembled from public information, never fabricated.
+
+- **Public-presence audit** — `PresenceAuditor` fetches a prospect's homepage and
+  extracts only observable signals (HTTPS, title, meta description, mobile
+  viewport, Open Graph, analytics, tracking pixel, platform, social links,
+  structured data, page size). Schema: `audits`.
+- **Grounded summary** — `AuditReporter` writes 2-3 honest sentences from those
+  findings under a strict no-fabrication prompt; thin findings → thin summary.
+- **audit:build** — audits a campaign's leads (resolving each site from the
+  company domain), reuses a sibling lead's audit for the same domain instead of
+  re-fetching, assigns each lead a landing-page token, and runs findings-only
+  when no LLM key is set.
+- **Per-prospect landing page** — public `/p/{token}` renders a personalized page:
+  the matched value prop, the grounded summary, and the real findings as
+  win/gap/info observations, with an honesty footer. `campaign:push` passes
+  `oe_landing_url` so the sequence can link it. `leads.public_token`.
+
 ## Phase 7 — Experiments + dashboard (done)
 
 The visibility-and-learning layer. Shipped before Phase 5 (Proof assets).

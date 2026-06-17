@@ -48,17 +48,15 @@ Week one is not ten replies. Warmup and a few iteration cycles come first; the r
 | 2 | Product Brain — uploads, URL ingest, profile builder, persona/OKR/value-prop library | ✅ done |
 | 3 | Lead pipeline — CSV import, dedupe, verify | ✅ core done¹ |
 | 4 | Personalization — sequence engine, AI step copy, guardrails, human review queue | ✅ done |
-| 5 | Proof assets — per-prospect landing pages, public-presence audit + report | 🛠 next |
+| 5 | Proof assets — per-prospect landing pages, public-presence audit + report | ✅ done |
 | 6 | Sync — Instantly + Lemlist adapters, reply/bounce ingest, reply classifier, compliance | ✅ done |
 | 7 | Experiments + dashboard — variant generator, segment optimization, funnel view | ✅ done |
 
-Plus a **settings page** (`/settings`) for entering and storing API keys and configuration, and a **funnel dashboard** (`/dashboard`).
+Plus a **settings page** (`/settings`) for keys and configuration, a **funnel dashboard** (`/dashboard`), and per-prospect **proof pages** (`/p/{token}`).
 
-Phase 6 (Sync) and Phase 7 (Experiments + dashboard) shipped before Phase 5 (Proof assets) on purpose — closing the send-and-read-replies loop and making the funnel visible came first; proof assets are the remaining core phase.
+All seven phases are built. Apollo as an automatic lead source and bandit auto-optimization remain as their own future increments (both need paid external data, which the no-autonomous-spend rule keeps out of the core loop).
 
 ¹ Enrichment and trigger detection need paid external data (Apollo, firmographic/news APIs), so they ship with the Apollo increment rather than as free stubs — consistent with the no-autonomous-spend rule.
-
-Apollo as an automatic lead source and bandit auto-optimization follow as their own increments once the core loop is running.
 
 ## Local setup
 
@@ -125,6 +123,15 @@ php artisan messages:approve --all --campaign=upstate-dentists
 ```
 
 Each step leads with a single value prop matched to the lead, cites proof only when it's real, and never fabricates personalization. Generated copy lands as a **draft** — nothing is eligible to send until it's approved.
+
+**Proof assets**
+
+```bash
+php artisan audit:build upstate-dentists      # audit each lead's site + write a grounded summary
+# then each lead has a personalized proof page at /p/{token}, linked from the email
+```
+
+`audit:build` fetches each prospect's public homepage, records real observable signals (HTTPS, meta tags, mobile-friendliness, analytics, platform, social links), and writes a short, honest summary from them — never an invented metric. Each lead gets a personalized page at `/p/{token}` showing those findings, and `campaign:push` passes its URL (`oe_landing_url`) so the sequence can link it.
 
 **Sync — hand off to the sender, read replies back**
 
