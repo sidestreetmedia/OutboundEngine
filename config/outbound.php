@@ -46,11 +46,16 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Apollo (later) — automatic lead source. CSV is the v1 source.
+    | Apollo — automatic lead source + enrichment.
     |--------------------------------------------------------------------------
+    | Search is free (no Apollo credits) and returns no emails. Revealing an
+    | email is enrichment, which costs 1 credit per person. The engine never
+    | spends on its own — enrichment is an explicit, confirmed, capped command.
+    | Set cost_per_credit to your plan's rate so the cost meter shows dollars.
     */
     'apollo' => [
         'key' => env('APOLLO_API_KEY'),
+        'cost_per_credit' => (float) env('APOLLO_COST_PER_CREDIT', 0.0),
     ],
 
     /*

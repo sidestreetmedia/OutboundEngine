@@ -77,6 +77,16 @@ class OutboundServiceProvider extends ServiceProvider
             return $app->make(OutboundManager::class)->driver();
         });
 
+        // Apollo lead source + enrichment; key via settings, cost metered.
+        $this->app->bind(\App\Services\Apollo\ApolloClient::class, function ($app): \App\Services\Apollo\ApolloClient {
+            $settings = $app->make(Settings::class);
+
+            return new \App\Services\Apollo\ApolloClient(
+                $settings->resolve('apollo_api_key'),
+                $app->make(CostMeter::class),
+            );
+        });
+
         // Ingestion: the file text extractors behind one manager. IngestionService
         // depends on this and is auto-resolved by the container.
         $this->app->singleton(HtmlToText::class);
