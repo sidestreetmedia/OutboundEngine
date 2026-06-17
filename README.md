@@ -80,7 +80,7 @@ Notes:
 
 API keys and integration settings can be entered two ways:
 
-- **Settings page** — visit `/settings`, enter your keys (Anthropic, Instantly, Lemlist, verification, Apollo). Secrets are encrypted at rest with your `APP_KEY`; a saved value overrides the matching `.env` entry.
+- **Settings page** — visit `/settings`, enter your keys (Anthropic, Instantly, Lemlist, verification, Apollo, HubSpot). Secrets are encrypted at rest with your `APP_KEY`; a saved value overrides the matching `.env` entry.
 - **`.env`** — set `ANTHROPIC_API_KEY`, `INSTANTLY_API_KEY`, etc. directly. The settings page falls back to these when nothing is saved.
 - **CLI** — `php artisan settings:set anthropic_api_key sk-ant-...` and `php artisan settings:list`.
 
@@ -88,7 +88,7 @@ The brain and copy generation need an Anthropic key; everything else (ingestion,
 
 ## Usage
 
-The pipeline is driven by Artisan commands today; the dashboard arrives in Phase 7.
+Most of the pipeline is driven by Artisan commands; the web UI adds a funnel dashboard (`/dashboard`), a settings page (`/settings`), and a Wins page (`/wins`) for pushing positive replies to HubSpot.
 
 **Product Brain**
 
@@ -161,6 +161,18 @@ php artisan replies:classify upstate-dentists       # interested / objection / n
 ```
 
 OutboundEngine never sends mail itself — Instantly or Lemlist do, with their own warmup, rotation, and throttling. The engine feeds them approved copy and reads the results back. Bounces and unsubscribes go straight onto a **do-not-contact list** that `campaign:push` enforces, so a suppressed address stays suppressed across future imports (`suppress:add` / `suppress:list` / `suppress:check` for manual control).
+
+**CRM — add positive replies to HubSpot**
+
+```bash
+# everyone who replied "interested" lives on the Wins page; flip a toggle to add one
+open http://localhost:8080/wins
+
+# or push in bulk from the CLI (optionally scoped to a campaign)
+php artisan hubspot:push upstate-dentists        # --all re-pushes, --limit caps
+```
+
+When a lead replies positively to the current CTA, the **Wins page** (`/wins`) lists them with their reply and the offer they responded to. The per-contact toggle adds them to HubSpot as a contact — keyed on email, so re-pushing updates instead of duplicating — and drops in a note capturing the campaign and CTA. `hubspot:push` does the same in bulk. Set your HubSpot private-app token on the settings page (or `HUBSPOT_API_KEY`); HubSpot has no per-call charge, so this never touches the cost meter.
 
 **Dashboard & experiments**
 

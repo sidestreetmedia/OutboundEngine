@@ -2,6 +2,26 @@
 
 Progress log for OutboundEngine, by phase. Newest first.
 
+## HubSpot CRM sync — positive replies into your CRM (done)
+
+When a lead replies positively to the current CTA, get them into HubSpot in one
+move, with the context of what they responded to.
+
+- **HubspotClient** — upserts a contact keyed on email (re-pushing updates, never
+  duplicates) and attaches a note. Private-app Bearer token; no per-call charge,
+  so nothing touches the cost meter. Schema: `leads.hubspot_contact_id`,
+  `leads.hubspot_synced_at`.
+- **CrmSync** — the one push path the Wins toggle and the CLI both share: builds
+  the contact from the lead, upserts it, and writes a note capturing the campaign
+  + the offer (CTA) they responded to plus their reply. Skips leads without a
+  real email yet.
+- **Wins page** (`/wins`) — lists everyone who replied positively, newest first,
+  with their reply and the CTA they bit on. A per-contact toggle adds them to
+  HubSpot; synced contacts show an "In HubSpot" pill with a re-sync link. No
+  token set and the toggles disable and point to settings.
+- **hubspot:push** — the same push in bulk, optionally scoped to a campaign;
+  `--all` re-pushes, `--limit` caps. `hubspot_api_key` added to settings + config.
+
 ## Apollo increment — automatic lead sourcing (done)
 
 An automatic lead source, split by cost so the no-autonomous-spend rule holds.
