@@ -2,6 +2,29 @@
 
 Progress log for OutboundEngine, by phase. Newest first.
 
+## Phase 6 — Sync (done)
+
+Shipped ahead of Phase 5 (Proof assets) on purpose: closing the send-and-read
+loop is what turns approved copy into real, scored outbound.
+
+- **Provider adapters** — real Instantly (API v2, Bearer auth) and Lemlist (Basic
+  auth) adapters behind one `OutboundProvider` contract, with `PushResult` /
+  `InboundReply` DTOs. HTTP is isolated per provider; endpoints follow the
+  documented APIs and want a smoke-test with live keys before first real use.
+- **Push** — `campaign:connect-provider` points a campaign at its platform-side
+  campaign; `campaign:push` sends verified leads with approved copy, bundling each
+  lead's step copy into `oe_subject_N` / `oe_body_N` variables the sequence
+  references. Idempotent; records the provider lead id; flips messages to queued.
+- **Reply + bounce ingest** — `replies:sync` pulls replies back, matches them to
+  leads, dedupes, tags auto-replies, and suppresses bounced addresses. Schema:
+  `replies`.
+- **Reply classifier** — `replies:classify` sorts each reply (interested /
+  objection / not_now / ooo / unsubscribe / auto_reply / other) and reports the
+  positive-reply count — the metric the whole system optimizes for.
+- **Compliance** — a `suppressions` do-not-contact list (email or whole domain)
+  that bounces, unsubscribes, and manual entries feed; enforced at push so a
+  suppressed address stays blocked across re-imports. `suppress:add/list/check`.
+
 ## Phase 4 — Personalization (done)
 
 - **Sequences** — `sequence:create` scaffolds a campaign's multi-step template

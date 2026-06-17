@@ -48,11 +48,13 @@ Week one is not ten replies. Warmup and a few iteration cycles come first; the r
 | 2 | Product Brain — uploads, URL ingest, profile builder, persona/OKR/value-prop library | ✅ done |
 | 3 | Lead pipeline — CSV import, dedupe, verify | ✅ core done¹ |
 | 4 | Personalization — sequence engine, AI step copy, guardrails, human review queue | ✅ done |
-| 5 | Proof assets — per-prospect landing pages, public-presence audit + report | 🛠 next |
-| 6 | Sync — Instantly + Lemlist adapters, reply/bounce ingest, reply classifier, compliance | ◻ planned |
+| 5 | Proof assets — per-prospect landing pages, public-presence audit + report | ◻ planned |
+| 6 | Sync — Instantly + Lemlist adapters, reply/bounce ingest, reply classifier, compliance | ✅ done |
 | 7 | Experiments + dashboard — variant generator, segment optimization, funnel view | ◻ planned |
 
 Plus a **settings page** (`/settings`) for entering and storing API keys and configuration.
+
+Phase 6 (Sync) shipped before Phase 5 (Proof assets) on purpose — closing the send-and-read-replies loop turns approved copy into real, scored outbound; proof assets layer on as a copy upgrade afterward.
 
 ¹ Enrichment and trigger detection need paid external data (Apollo, firmographic/news APIs), so they ship with the Apollo increment rather than as free stubs — consistent with the no-autonomous-spend rule.
 
@@ -123,6 +125,19 @@ php artisan messages:approve --all --campaign=upstate-dentists
 ```
 
 Each step leads with a single value prop matched to the lead, cites proof only when it's real, and never fabricates personalization. Generated copy lands as a **draft** — nothing is eligible to send until it's approved.
+
+**Sync — hand off to the sender, read replies back**
+
+```bash
+# Connect a campaign to the platform-side campaign you've set up (with sending
+# accounts + a sequence that references {{oe_subject_1}} / {{oe_body_1}}, ...)
+php artisan campaign:connect-provider upstate-dentists --provider=instantly --campaign-id=abc123
+php artisan campaign:push upstate-dentists          # push approved copy for verified leads
+php artisan replies:sync upstate-dentists           # pull replies + bounces back
+php artisan replies:classify upstate-dentists       # interested / objection / not now / unsubscribe / ...
+```
+
+OutboundEngine never sends mail itself — Instantly or Lemlist do, with their own warmup, rotation, and throttling. The engine feeds them approved copy and reads the results back. Bounces and unsubscribes go straight onto a **do-not-contact list** that `campaign:push` enforces, so a suppressed address stays suppressed across future imports (`suppress:add` / `suppress:list` / `suppress:check` for manual control).
 
 ## License
 
