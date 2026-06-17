@@ -5,6 +5,7 @@ namespace App\Services\Ingestion;
 use App\Models\Product;
 use App\Models\ProductSource;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -17,8 +18,10 @@ use Throwable;
  */
 class IngestionService
 {
-    public function __construct(private readonly TextExtractionManager $extractors)
-    {
+    public function __construct(
+        private readonly TextExtractionManager $extractors,
+        private readonly HtmlToText $htmlToText,
+    ) {
     }
 
     public function ingestFilePath(Product $product, string $absolutePath, ?string $label = null): ProductSource
@@ -43,6 +46,48 @@ class IngestionService
             (string) file_get_contents($file->getRealPath()),
             $label,
         );
+    }
+
+    /**
+     * Fetch a URL, store the raw HTML, and extract readable text. Network and
+     * parse failures are recorded on the source rather than thrown.
+     */
+    public function ingestUrl(Product $product, string $url, ?string $label = null): ProductSource
+    {
+        $source = $product->sources()->create([
+            'type' => ProductSource::TYPE_URL,
+            'label' => $label,
+            'url' => $url,
+        ]);
+
+        try {
+            $response = Http::timeout(15)
+                ->withHeaders(['User-Agent' => 'OutboundEngine/1.0 (+brain ingest)'])
+                ->get($url);
+
+            if ($response->failed()) {
+                $source->markFailed("Fetch failed: HTTP {$response->status()}");
+
+                return $source->refresh();
+            }
+
+            $html = $response->body();
+            $storedPath = "products/{$product->id}/" . Str::random(8) . '-url.html';
+            Storage::put($storedPath, $html);
+
+            $source->forceFill([
+                'mime' => 'text/html',
+                'path' => $storedPath,
+                'bytes' => strlen($html),
+                'label' => $label ?: $this->htmlToText->title($html),
+            ])->save();
+
+            $source->markExtracted($this->extractors->normalize($this->htmlToText->convert($html)));
+        } catch (Throwable $e) {
+            $source->markFailed("Fetch error: {$e->getMessage()}");
+        }
+
+        return $source->refresh();
     }
 
     private function store(Product $product, string $originalName, string $contents, ?string $label): ProductSource

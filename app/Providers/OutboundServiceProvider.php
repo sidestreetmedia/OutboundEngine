@@ -7,8 +7,10 @@ use App\Contracts\LlmClient;
 use App\Contracts\OutboundProvider;
 use App\Services\Cost\CostMeter;
 use App\Services\Ingestion\Extractors\DocxExtractor;
+use App\Services\Ingestion\Extractors\HtmlExtractor;
 use App\Services\Ingestion\Extractors\PdfExtractor;
 use App\Services\Ingestion\Extractors\PlainTextExtractor;
+use App\Services\Ingestion\HtmlToText;
 use App\Services\Ingestion\TextExtractionManager;
 use App\Services\Llm\NullLlmClient;
 use App\Services\Outbound\InstantlyProvider;
@@ -55,11 +57,14 @@ class OutboundServiceProvider extends ServiceProvider
 
         // Ingestion: the file text extractors behind one manager. IngestionService
         // depends on this and is auto-resolved by the container.
-        $this->app->singleton(TextExtractionManager::class, function (): TextExtractionManager {
+        $this->app->singleton(HtmlToText::class);
+
+        $this->app->singleton(TextExtractionManager::class, function ($app): TextExtractionManager {
             return new TextExtractionManager([
                 new PlainTextExtractor(),
                 new PdfExtractor(),
                 new DocxExtractor(),
+                new HtmlExtractor($app->make(HtmlToText::class)),
             ]);
         });
     }
