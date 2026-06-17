@@ -12,6 +12,7 @@ use App\Services\Ingestion\Extractors\PdfExtractor;
 use App\Services\Ingestion\Extractors\PlainTextExtractor;
 use App\Services\Ingestion\HtmlToText;
 use App\Services\Ingestion\TextExtractionManager;
+use App\Services\Llm\AnthropicClient;
 use App\Services\Llm\NullLlmClient;
 use App\Services\Outbound\InstantlyProvider;
 use App\Services\Outbound\LemlistProvider;
@@ -34,8 +35,23 @@ class OutboundServiceProvider extends ServiceProvider
         // Cost meter — the one fully-real service in Phase 1.
         $this->app->singleton(CostMeter::class);
 
-        // LLM + verifier: stubs until their phase lands.
-        $this->app->bind(LlmClient::class, NullLlmClient::class);
+        // LLM: the real Anthropic client once a key is set, else the null stub
+        // so the app still boots without credentials.
+        $this->app->bind(LlmClient::class, function ($app): LlmClient {
+            $llm = config('outbound.llm');
+
+            if (blank($llm['key'] ?? null)) {
+                return new NullLlmClient();
+            }
+
+            return new AnthropicClient(
+                $app->make(CostMeter::class),
+                $llm['key'],
+                $llm['model'] ?? 'claude-sonnet-4-6',
+            );
+        });
+
+        // Verifier: stub until Phase 3.
         $this->app->bind(EmailVerifier::class, NullVerifier::class);
 
         // Sending platforms: both built from config, behind one manager.
