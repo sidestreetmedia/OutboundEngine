@@ -45,6 +45,18 @@ class Product extends Model
         return $this->hasMany(ProductSource::class);
     }
 
+    /** @return HasMany<Persona, $this> */
+    public function personas(): HasMany
+    {
+        return $this->hasMany(Persona::class);
+    }
+
+    /** @return HasMany<ValueProp, $this> */
+    public function valueProps(): HasMany
+    {
+        return $this->hasMany(ValueProp::class);
+    }
+
     /**
      * Whether the brain builder has produced a structured profile yet.
      */
