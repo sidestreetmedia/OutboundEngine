@@ -2,6 +2,25 @@
 
 Progress log for OutboundEngine, by phase. Newest first.
 
+## Apollo increment — automatic lead sourcing (done)
+
+An automatic lead source, split by cost so the no-autonomous-spend rule holds.
+
+- **ApolloClient** — `searchPeople()` (free, net-new prospects, no emails) and
+  `enrichPerson()` (1 credit, reveals the work email + profile). Every reveal is
+  recorded on the CostMeter; a 200 with no match isn't charged. `cost_per_credit`
+  config shows dollars at your plan's rate. Schema: `leads.apollo_id`.
+- **apollo:search** — sources prospects by titles/keywords/locations/employee
+  range into a campaign (name, title, company, domain, LinkedIn). Free; emails
+  start locked behind a placeholder with status `new`. Dedupes by `apollo_id`;
+  `--dry-run` previews the query.
+- **apollo:enrich** — the only paid step. Reveals emails, fills missing fields,
+  and derives a real "new in role" trigger from employment history into
+  `lead.triggers`. Spend-gated: shows the credit cost and confirms first;
+  non-interactive without `--yes` aborts rather than spend. `--limit` caps it.
+  Handles no-email, no-match, and merging a revealed email that collides with an
+  existing lead.
+
 ## Phase 5 — Proof assets (done)
 
 Real, genuine proof — assembled from public information, never fabricated.

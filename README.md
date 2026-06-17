@@ -9,7 +9,7 @@ Built on Laravel 13 (PHP 8.3), MySQL, and Redis. Fully Dockerized — one image,
 ## The pipeline
 
 1. **Product Brain** — upload your decks, case studies, and site; the engine builds a structured profile of what you sell and a value-prop library mapped to the personas you target and the OKRs each of them actually owns.
-2. **Lead pipeline** — CSV of emails in (Apollo API as an automatic source later), then dedupe, verify, and enrich with title / industry / company / recent triggers.
+2. **Lead pipeline** — CSV of emails in, or sourced automatically from Apollo, then dedupe, verify, and enrich with title / industry / company / recent triggers.
 3. **Personalization** — one sequence per prospect, each step tied to a single value prop, a single proof asset, and a real trigger. No spray-and-pray mail-merge.
 4. **Proof assets** — a personalized landing page rendered per prospect, plus a genuine public-presence audit (their site, SEO, ads, social, tech stack) built from signals anyone can see.
 5. **Sync** — push leads and sequences into Instantly or Lemlist, pull replies and bounces back, and let the model sort every reply: interested / objection / not now / out-of-office / unsubscribe.
@@ -54,9 +54,9 @@ Week one is not ten replies. Warmup and a few iteration cycles come first; the r
 
 Plus a **settings page** (`/settings`) for keys and configuration, a **funnel dashboard** (`/dashboard`), and per-prospect **proof pages** (`/p/{token}`).
 
-All seven phases are built. Apollo as an automatic lead source and bandit auto-optimization remain as their own future increments (both need paid external data, which the no-autonomous-spend rule keeps out of the core loop).
+All seven phases are built, plus Apollo as an automatic lead source (sourcing + enrichment + trigger detection). Bandit auto-optimization remains as its own future increment — it needs the send loop running on live data, and auto-shifting traffic is the kind of autonomous action the no-spend, human-in-the-loop design holds back deliberately.
 
-¹ Enrichment and trigger detection need paid external data (Apollo, firmographic/news APIs), so they ship with the Apollo increment rather than as free stubs — consistent with the no-autonomous-spend rule.
+¹ Enrichment and trigger detection need paid external data (Apollo), so they ship with the Apollo increment rather than as free stubs — consistent with the no-autonomous-spend rule. Done as of the Apollo increment.
 
 ## Local setup
 
@@ -110,6 +110,22 @@ php artisan leads:stats
 ```
 
 Only `verified` leads are eligible to be contacted — invalid, risky, and unverified addresses never go out.
+
+**Apollo — automatic lead sourcing**
+
+```bash
+# 1. Source prospects (FREE — no Apollo credits, no emails yet)
+php artisan apollo:search web-care --titles="Owner,Founder" --keywords="med spa,dental" --locations="United States" --limit=50
+php artisan apollo:search web-care --titles="Owner" --dry-run        # preview the query without calling Apollo
+
+# 2. Reveal emails + enrich (COSTS 1 Apollo credit per lead — confirmed first)
+php artisan apollo:enrich web-care --limit=25                        # asks before spending; --yes to skip the prompt
+
+# 3. Verify deliverability like any other lead
+php artisan leads:verify
+```
+
+`apollo:search` pulls net-new prospects into a campaign with their name/title/company/domain/LinkedIn — free, because Apollo doesn't charge for search and returns no emails. `apollo:enrich` is the only paid step: it reveals work emails, fills in any missing fields, and derives a real "recently moved into this role" trigger from Apollo's employment history (never invented). It shows the credit cost and asks before spending — run non-interactively without `--yes` and it aborts rather than spend. Set `APOLLO_COST_PER_CREDIT` to your plan's rate so the cost meter shows dollars.
 
 **Personalization**
 
