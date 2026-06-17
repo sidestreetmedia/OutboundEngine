@@ -40,6 +40,8 @@ class Lead extends Model
         'verification_status',
         'verified_at',
         'source',
+        'provider_lead_id',
+        'pushed_at',
         'lead_import_id',
         'campaign_id',
         'enrichment',
@@ -55,6 +57,7 @@ class Lead extends Model
     {
         return [
             'verified_at' => 'datetime',
+            'pushed_at' => 'datetime',
             'enrichment' => 'array',
             'triggers' => 'array',
             'meta' => 'array',

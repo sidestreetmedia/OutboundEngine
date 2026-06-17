@@ -22,6 +22,8 @@ class Campaign extends Model
         'name',
         'slug',
         'status',
+        'provider',
+        'provider_campaign_id',
         'product_id',
         'description',
         'settings',
