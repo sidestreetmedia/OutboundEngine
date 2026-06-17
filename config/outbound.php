@@ -60,6 +60,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | HubSpot — CRM sync for positive replies.
+    |--------------------------------------------------------------------------
+    | When a contact replies positively to the current CTA, push them into
+    | HubSpot as a contact with a note capturing the campaign + offer. Auth is a
+    | private-app token; HubSpot has no per-call charge.
+    */
+    'hubspot' => [
+        'key' => env('HUBSPOT_API_KEY'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Cost meter
     |--------------------------------------------------------------------------
     | The engine never spends money on its own. It records what API calls cost

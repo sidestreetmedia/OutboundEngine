@@ -87,6 +87,13 @@ class OutboundServiceProvider extends ServiceProvider
             );
         });
 
+        // HubSpot CRM sync; private-app token via settings.
+        $this->app->bind(\App\Services\Crm\HubspotClient::class, function ($app): \App\Services\Crm\HubspotClient {
+            $settings = $app->make(Settings::class);
+
+            return new \App\Services\Crm\HubspotClient($settings->resolve('hubspot_api_key'));
+        });
+
         // Ingestion: the file text extractors behind one manager. IngestionService
         // depends on this and is auto-resolved by the container.
         $this->app->singleton(HtmlToText::class);

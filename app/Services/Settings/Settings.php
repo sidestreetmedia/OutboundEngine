@@ -25,6 +25,7 @@ class Settings
         'verify_provider' => ['label' => 'Email verification provider', 'fallback' => 'outbound.verification.provider', 'secret' => false, 'group' => 'Verification'],
         'verify_api_key' => ['label' => 'Email verification API key', 'fallback' => 'outbound.verification.key', 'secret' => true, 'group' => 'Verification'],
         'apollo_api_key' => ['label' => 'Apollo API key', 'fallback' => 'outbound.apollo.key', 'secret' => true, 'group' => 'Enrichment'],
+        'hubspot_api_key' => ['label' => 'HubSpot private-app token', 'fallback' => 'outbound.hubspot.key', 'secret' => true, 'group' => 'CRM', 'placeholder' => 'pat-na1-...'],
     ];
 
     /** @var array<string, string|null>|null */
