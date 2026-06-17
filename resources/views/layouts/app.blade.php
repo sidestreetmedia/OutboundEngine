@@ -63,6 +63,20 @@
             color: var(--muted);
         }
 
+        .topnav {
+            margin-left: auto;
+            display: flex;
+            gap: 18px;
+        }
+
+        .topnav a {
+            font-size: 13px;
+            color: var(--muted);
+            text-decoration: none;
+        }
+
+        .topnav a:hover { color: var(--ink); }
+
         .page {
             max-width: 760px;
             margin: 0 auto;
@@ -102,6 +116,10 @@
         <div class="topbar-inner">
             <a href="{{ url('/') }}" class="wordmark">Outbound<span>Engine</span></a>
             <span class="topbar-tag">@yield('tag', 'the brain around your cold email')</span>
+            <nav class="topnav">
+                <a href="{{ route('dashboard') }}">Dashboard</a>
+                <a href="{{ route('settings.edit') }}">Settings</a>
+            </nav>
         </div>
     </header>
 
