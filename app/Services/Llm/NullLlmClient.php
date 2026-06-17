@@ -6,16 +6,16 @@ use App\Contracts\LlmClient;
 use RuntimeException;
 
 /**
- * Placeholder LLM client so the container resolves cleanly in Phase 1.
- * Throws if anything actually tries to call a model. The real Anthropic
- * client replaces this binding in Phase 2 (Product Brain).
+ * Fallback LLM client used when no ANTHROPIC_API_KEY is configured. Throws if
+ * anything tries to call a model, so a missing key fails loudly instead of
+ * silently skipping the brain. Set the key to activate the real client.
  */
 class NullLlmClient implements LlmClient
 {
     public function complete(string $prompt, array $options = []): string
     {
         throw new RuntimeException(
-            'LLM client not configured yet — the Anthropic client lands in Phase 2 (Product Brain).'
+            'No LLM configured. Set ANTHROPIC_API_KEY to enable the brain and copy generation.'
         );
     }
 }
