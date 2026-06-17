@@ -59,4 +59,10 @@ class Campaign extends Model
     {
         return $this->hasMany(Lead::class);
     }
+
+    /** @return HasMany<Reply, $this> */
+    public function replies(): HasMany
+    {
+        return $this->hasMany(Reply::class);
+    }
 }
