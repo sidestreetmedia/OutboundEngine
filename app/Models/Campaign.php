@@ -46,6 +46,12 @@ class Campaign extends Model
         return $this->belongsTo(Product::class);
     }
 
+    /** @return HasMany<Sequence, $this> */
+    public function sequences(): HasMany
+    {
+        return $this->hasMany(Sequence::class);
+    }
+
     /** @return HasMany<Lead, $this> */
     public function leads(): HasMany
     {
