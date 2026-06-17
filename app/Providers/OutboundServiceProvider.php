@@ -17,6 +17,7 @@ use App\Services\Llm\NullLlmClient;
 use App\Services\Outbound\InstantlyProvider;
 use App\Services\Outbound\LemlistProvider;
 use App\Services\Outbound\OutboundManager;
+use App\Services\Settings\Settings;
 use App\Services\Verification\NullVerifier;
 use Illuminate\Support\ServiceProvider;
 
@@ -35,35 +36,39 @@ class OutboundServiceProvider extends ServiceProvider
         // Cost meter — the one fully-real service in Phase 1.
         $this->app->singleton(CostMeter::class);
 
-        // LLM: the real Anthropic client once a key is set, else the null stub
-        // so the app still boots without credentials.
-        $this->app->bind(LlmClient::class, function ($app): LlmClient {
-            $llm = config('outbound.llm');
+        // Runtime settings: values saved via the settings page/CLI override .env.
+        $this->app->singleton(Settings::class);
 
-            if (blank($llm['key'] ?? null)) {
+        // LLM: the real Anthropic client once a key is available (saved setting
+        // or env), else the null stub so the app still boots without credentials.
+        $this->app->bind(LlmClient::class, function ($app): LlmClient {
+            $settings = $app->make(Settings::class);
+            $key = $settings->resolve('anthropic_api_key');
+
+            if (blank($key)) {
                 return new NullLlmClient();
             }
 
             return new AnthropicClient(
                 $app->make(CostMeter::class),
-                $llm['key'],
-                $llm['model'] ?? 'claude-sonnet-4-6',
+                $key,
+                $settings->resolve('llm_model') ?: 'claude-sonnet-4-6',
             );
         });
 
         // Verifier: stub until Phase 3.
         $this->app->bind(EmailVerifier::class, NullVerifier::class);
 
-        // Sending platforms: both built from config, behind one manager.
-        $this->app->singleton(OutboundManager::class, function (): OutboundManager {
-            $config = config('outbound');
+        // Sending platforms: both built behind one manager, keys via settings.
+        $this->app->singleton(OutboundManager::class, function ($app): OutboundManager {
+            $settings = $app->make(Settings::class);
 
             $providers = [
-                'instantly' => new InstantlyProvider($config['providers']['instantly']['key'] ?? null),
-                'lemlist' => new LemlistProvider($config['providers']['lemlist']['key'] ?? null),
+                'instantly' => new InstantlyProvider($settings->resolve('instantly_api_key')),
+                'lemlist' => new LemlistProvider($settings->resolve('lemlist_api_key')),
             ];
 
-            return new OutboundManager($providers, $config['provider'] ?? 'instantly');
+            return new OutboundManager($providers, $settings->resolve('outbound_provider') ?: 'instantly');
         });
 
         // Resolving the bare contract gives back the active (default) provider.
