@@ -5,8 +5,10 @@ namespace App\Console\Commands;
 use App\Models\Campaign;
 use App\Models\Lead;
 use App\Models\Reply;
+use App\Services\Compliance\SuppressionList;
 use App\Services\Outbound\Dto\InboundReply;
 use App\Services\Outbound\OutboundManager;
+use App\Models\Suppression;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 
@@ -18,7 +20,7 @@ class SyncRepliesCommand extends Command
 
     protected $description = 'Pull replies and bounces back from the sending platform';
 
-    public function handle(OutboundManager $manager): int
+    public function handle(OutboundManager $manager, SuppressionList $suppression): int
     {
         $campaign = Campaign::query()
             ->where('id', $this->argument('campaign'))
@@ -84,9 +86,11 @@ class SyncRepliesCommand extends Command
             ]);
             $new++;
 
-            // A bounce means the address is dead — stop contacting it.
-            if ($reply->isBounce && $lead) {
-                $lead->update(['status' => Lead::STATUS_SUPPRESSED]);
+            // A bounce means the address is dead — add it to the do-not-contact
+            // list (canonical) and mark any matching lead suppressed.
+            if ($reply->isBounce) {
+                $suppression->suppressEmail($reply->email, Suppression::REASON_BOUNCE);
+                $lead?->update(['status' => Lead::STATUS_SUPPRESSED]);
                 $bounces++;
             }
         }

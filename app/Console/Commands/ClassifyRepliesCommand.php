@@ -5,6 +5,8 @@ namespace App\Console\Commands;
 use App\Models\Campaign;
 use App\Models\Lead;
 use App\Models\Reply;
+use App\Models\Suppression;
+use App\Services\Compliance\SuppressionList;
 use App\Services\Outbound\ReplyClassifier;
 use App\Services\Settings\Settings;
 use Illuminate\Console\Command;
@@ -18,7 +20,7 @@ class ClassifyRepliesCommand extends Command
 
     protected $description = 'Classify replies (interested / objection / not now / OOO / unsubscribe / ...)';
 
-    public function handle(ReplyClassifier $classifier, Settings $settings): int
+    public function handle(ReplyClassifier $classifier, Settings $settings, SuppressionList $suppression): int
     {
         if (blank($settings->resolve('anthropic_api_key'))) {
             $this->error('No Anthropic key set. Add it on the settings page or in .env before classifying.');
@@ -61,9 +63,11 @@ class ClassifyRepliesCommand extends Command
             $reply->update(['classification' => $label]);
             $tally[$label] = ($tally[$label] ?? 0) + 1;
 
-            // Honor unsubscribes immediately.
-            if ($label === Reply::CLASS_UNSUBSCRIBE && $reply->lead) {
-                $reply->lead->update(['status' => Lead::STATUS_SUPPRESSED]);
+            // Honor unsubscribes immediately — add to the do-not-contact list
+            // and suppress any matching lead.
+            if ($label === Reply::CLASS_UNSUBSCRIBE) {
+                $suppression->suppressEmail($reply->from_email, Suppression::REASON_UNSUBSCRIBE);
+                $reply->lead?->update(['status' => Lead::STATUS_SUPPRESSED]);
                 $suppressed++;
             }
         }

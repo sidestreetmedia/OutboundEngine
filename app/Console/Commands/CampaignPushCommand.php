@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Campaign;
 use App\Models\Lead;
 use App\Models\Message;
+use App\Services\Compliance\SuppressionList;
 use App\Services\Outbound\OutboundManager;
 use Illuminate\Console\Command;
 
@@ -16,7 +17,7 @@ class CampaignPushCommand extends Command
 
     protected $description = 'Push approved copy for verified leads to the connected sending platform';
 
-    public function handle(OutboundManager $manager): int
+    public function handle(OutboundManager $manager, SuppressionList $suppression): int
     {
         $campaign = Campaign::query()
             ->where('id', $this->argument('campaign'))
@@ -61,8 +62,18 @@ class CampaignPushCommand extends Command
         $pushed = 0;
         $queued = 0;
         $failed = 0;
+        $skipped = 0;
 
         foreach ($leads as $lead) {
+            // Compliance gate: never hand a suppressed address to a sender, even
+            // if it slipped back in via a re-import.
+            if ($suppression->isSuppressed($lead->email)) {
+                $lead->update(['status' => Lead::STATUS_SUPPRESSED]);
+                $skipped++;
+
+                continue;
+            }
+
             $messages = $lead->messages()
                 ->where('status', Message::STATUS_APPROVED)
                 ->orderBy('position')
@@ -105,9 +116,10 @@ class CampaignPushCommand extends Command
         }
 
         $this->info('Done.');
-        $this->line("  pushed:  {$pushed} lead(s)");
-        $this->line("  queued:  {$queued} message(s)");
-        $this->line("  failed:  {$failed}");
+        $this->line("  pushed:     {$pushed} lead(s)");
+        $this->line("  queued:     {$queued} message(s)");
+        $this->line("  suppressed: {$skipped} (on the do-not-contact list)");
+        $this->line("  failed:     {$failed}");
         $this->newLine();
         $this->line("Your {$campaign->provider} sequence should reference the pushed copy as");
         $this->line('  {{oe_subject_1}} / {{oe_body_1}}, {{oe_subject_2}} / {{oe_body_2}}, ...');
