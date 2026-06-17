@@ -56,14 +56,21 @@ Apollo as an automatic lead source and bandit auto-optimization follow as their 
 
 ## Local setup
 
-Full instructions arrive with the Docker stack in the next commit. The short version:
+Requires Docker. The stack is `app` (php-fpm), `web` (nginx), `queue`, `scheduler`, `mysql`, and `redis`.
 
 ```bash
 cp .env.example .env
-docker compose up -d
+docker compose up -d --build      # first boot installs vendor/ automatically
 docker compose exec app php artisan key:generate
 docker compose exec app php artisan migrate
 ```
+
+Then open **http://localhost:8080** (change the port with `OE_HTTP_PORT` in `.env`).
+
+Notes:
+- First boot is slow — the image builds and `composer install` runs once. The `queue` and `scheduler` containers wait for that to finish before starting, so a few seconds of "waiting" in the logs is expected.
+- `vendor/`, `node_modules/`, and `.env` are never committed or baked into the image.
+- The same `Dockerfile` produces a standalone image for deploying anywhere — no local-only assumptions.
 
 ## License
 

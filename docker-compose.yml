@@ -1,0 +1,105 @@
+# OutboundEngine local stack.
+#   docker compose up -d --build
+# First boot installs vendor/ automatically (app service), then the rest start.
+#
+# Service map (names match .env): app=php-fpm, web=nginx, mysql, redis.
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: outboundengine-app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    environment:
+      OE_AUTO_COMPOSER: "1"
+    volumes:
+      - ./:/var/www/html
+    env_file:
+      - .env
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      # "healthy" only once dependencies are installed — gates queue/scheduler.
+      test: ["CMD-SHELL", "test -f vendor/autoload.php"]
+      interval: 5s
+      timeout: 3s
+      retries: 60
+
+  web:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - "${OE_HTTP_PORT:-8080}:80"
+    volumes:
+      - ./:/var/www/html:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      app:
+        condition: service_started
+
+  queue:
+    image: outboundengine-app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    command: php artisan queue:work --tries=3 --max-time=3600 --sleep=2 --backoff=10
+    volumes:
+      - ./:/var/www/html
+    env_file:
+      - .env
+    depends_on:
+      app:
+        condition: service_healthy
+
+  scheduler:
+    image: outboundengine-app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    command: php artisan schedule:work
+    volumes:
+      - ./:/var/www/html
+    env_file:
+      - .env
+    depends_on:
+      app:
+        condition: service_healthy
+
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-outboundengine}
+      MYSQL_USER: ${DB_USERNAME:-outboundengine}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+    ports:
+      - "${OE_DB_PORT:-3306}:3306"
+    volumes:
+      - oe-mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${DB_ROOT_PASSWORD:-root}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "${OE_REDIS_PORT:-6379}:6379"
+    volumes:
+      - oe-redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  oe-mysql:
+  oe-redis:

@@ -1,0 +1,33 @@
+# Keep the build context small and the image clean.
+.git
+.github
+.gitignore
+.gitattributes
+.editorconfig
+
+# Never bake local secrets or local-only state into the image
+.env
+.env.*
+!.env.example
+
+# Installed/built artifacts — the image builds its own
+/vendor
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/storage/logs/*
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+
+# Local databases
+/database/*.sqlite
+/database/*.sqlite-*
+
+# Docker + tooling
+docker-compose*.yml
+*.md
+.phpunit.result.cache
+.phpunit.cache
