@@ -118,6 +118,7 @@
             <span class="topbar-tag">@yield('tag', 'the brain around your cold email')</span>
             <nav class="topnav">
                 <a href="{{ route('dashboard') }}">Dashboard</a>
+                <a href="{{ route('wins.index') }}">Wins</a>
                 <a href="{{ route('settings.edit') }}">Settings</a>
             </nav>
         </div>
