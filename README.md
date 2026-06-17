@@ -48,13 +48,13 @@ Week one is not ten replies. Warmup and a few iteration cycles come first; the r
 | 2 | Product Brain — uploads, URL ingest, profile builder, persona/OKR/value-prop library | ✅ done |
 | 3 | Lead pipeline — CSV import, dedupe, verify | ✅ core done¹ |
 | 4 | Personalization — sequence engine, AI step copy, guardrails, human review queue | ✅ done |
-| 5 | Proof assets — per-prospect landing pages, public-presence audit + report | ◻ planned |
+| 5 | Proof assets — per-prospect landing pages, public-presence audit + report | 🛠 next |
 | 6 | Sync — Instantly + Lemlist adapters, reply/bounce ingest, reply classifier, compliance | ✅ done |
-| 7 | Experiments + dashboard — variant generator, segment optimization, funnel view | ◻ planned |
+| 7 | Experiments + dashboard — variant generator, segment optimization, funnel view | ✅ done |
 
-Plus a **settings page** (`/settings`) for entering and storing API keys and configuration.
+Plus a **settings page** (`/settings`) for entering and storing API keys and configuration, and a **funnel dashboard** (`/dashboard`).
 
-Phase 6 (Sync) shipped before Phase 5 (Proof assets) on purpose — closing the send-and-read-replies loop turns approved copy into real, scored outbound; proof assets layer on as a copy upgrade afterward.
+Phase 6 (Sync) and Phase 7 (Experiments + dashboard) shipped before Phase 5 (Proof assets) on purpose — closing the send-and-read-replies loop and making the funnel visible came first; proof assets are the remaining core phase.
 
 ¹ Enrichment and trigger detection need paid external data (Apollo, firmographic/news APIs), so they ship with the Apollo increment rather than as free stubs — consistent with the no-autonomous-spend rule.
 
@@ -138,6 +138,19 @@ php artisan replies:classify upstate-dentists       # interested / objection / n
 ```
 
 OutboundEngine never sends mail itself — Instantly or Lemlist do, with their own warmup, rotation, and throttling. The engine feeds them approved copy and reads the results back. Bounces and unsubscribes go straight onto a **do-not-contact list** that `campaign:push` enforces, so a suppressed address stays suppressed across future imports (`suppress:add` / `suppress:list` / `suppress:check` for manual control).
+
+**Dashboard & experiments**
+
+```bash
+# the funnel, in your browser: leads → verified → ... → pushed → replied → positive
+open http://localhost:8080/dashboard        # or: php artisan dashboard [campaign]
+
+php artisan segments upstate-dentists --by=value_prop   # what's driving positive replies
+php artisan segments upstate-dentists --by=angle        # also: title, industry
+php artisan sequence:variants upstate-dentists --step=1  # A/B subject-line variants for a step
+```
+
+The dashboard puts the **positive-reply rate** front and centre against the target, with the full funnel, reply breakdown, and a cost meter. `segments` ranks value props, angles, titles, and industries by positive-reply rate so you can lean into what works and retire what doesn't — optimizing on replies, never opens.
 
 ## License
 

@@ -2,6 +2,23 @@
 
 Progress log for OutboundEngine, by phase. Newest first.
 
+## Phase 7 — Experiments + dashboard (done)
+
+The visibility-and-learning layer. Shipped before Phase 5 (Proof assets).
+
+- **Funnel dashboard** — `GET /dashboard` (and a `dashboard` CLI). The funnel as
+  cumulative lead stages with proportional bars, the positive-reply rate as the
+  hero stat against the target, reply breakdown, cost meter, and a per-campaign
+  table. Backed by a `FunnelMetrics` service (funnel / messages / replies / rates
+  / cost, per campaign and overall).
+- **Segment optimization** — `segments --by=value_prop|angle|title|industry`
+  ranks segments by positive-reply rate so winners and losers are obvious. A lead
+  spanning several value props is counted in each. Optimizing on replies, not
+  opens.
+- **Variant generator** — `sequence:variants` produces distinct A/B subject-line
+  variants for a step (spam-linted), saved to the step to test in the platform.
+- Topbar gains Dashboard / Settings nav.
+
 ## Phase 6 — Sync (done)
 
 Shipped ahead of Phase 5 (Proof assets) on purpose: closing the send-and-read
