@@ -2,10 +2,25 @@
 
 Progress log for OutboundEngine, by phase. Newest first.
 
-## Phase 4 — Personalization (in progress)
+## Phase 4 — Personalization (done)
 
-Sequence engine, AI step-copy generation, anti-spam + no-fabrication guardrails,
-and a human review queue. _Building now._
+- **Sequences** — `sequence:create` scaffolds a campaign's multi-step template
+  (always an intro leading with one value prop, a break-up last, filler angles
+  between), with per-step delay, angle, subject hint, and instructions. Schema:
+  `sequences`, `sequence_steps`.
+- **Value-prop selection** — `ValuePropSelector` enforces the "one value prop per
+  message" rule: scores value props by how well their persona matches the lead's
+  title/seniority and rotates across steps so each opens with a different angle.
+- **AI copy generation** — `campaign:generate`. One draft email per (verified
+  lead, step). The model gets only the prospect's real fields, the selected value
+  prop, and a proof/trigger _only if real_; the prompt forbids invented facts,
+  fake "I saw your post" personalization, hype, and signatures. Verified-leads
+  only, idempotent, cost attributed to the lead. Schema: `messages`.
+- **Guardrails** — `SpamChecker` flags blasty/over-long copy (warnings, not
+  blocks) onto each message for review.
+- **Human review queue** — `messages:review` / `messages:approve` /
+  `messages:reject`. Nothing is eligible to send until a draft is approved.
+- **Campaign CLI** — `campaign:create`, `campaign:list`.
 
 ## Phase 3 — Lead Pipeline (core done)
 

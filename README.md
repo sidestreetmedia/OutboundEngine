@@ -47,8 +47,8 @@ Week one is not ten replies. Warmup and a few iteration cycles come first; the r
 | 1 | Foundation — skeleton, Docker stack, base schema, config | ✅ done |
 | 2 | Product Brain — uploads, URL ingest, profile builder, persona/OKR/value-prop library | ✅ done |
 | 3 | Lead pipeline — CSV import, dedupe, verify | ✅ core done¹ |
-| 4 | Personalization — sequence engine, AI step copy, guardrails, human review queue | 🛠 in progress |
-| 5 | Proof assets — per-prospect landing pages, public-presence audit + report | ◻ planned |
+| 4 | Personalization — sequence engine, AI step copy, guardrails, human review queue | ✅ done |
+| 5 | Proof assets — per-prospect landing pages, public-presence audit + report | 🛠 next |
 | 6 | Sync — Instantly + Lemlist adapters, reply/bounce ingest, reply classifier, compliance | ◻ planned |
 | 7 | Experiments + dashboard — variant generator, segment optimization, funnel view | ◻ planned |
 
@@ -110,6 +110,19 @@ php artisan leads:stats
 ```
 
 Only `verified` leads are eligible to be contacted — invalid, risky, and unverified addresses never go out.
+
+**Personalization**
+
+```bash
+php artisan campaign:create "Upstate Dentists" --product=web-care
+php artisan sequence:create upstate-dentists --steps=3      # intro + middle + break-up
+php artisan campaign:generate upstate-dentists              # one draft email per verified lead × step
+php artisan messages:review upstate-dentists                # read the drafts (+ any spam-linter flags)
+php artisan messages:approve --all --campaign=upstate-dentists
+# or per message:  messages:approve 42   /   messages:reject 42 --note="too generic"
+```
+
+Each step leads with a single value prop matched to the lead, cites proof only when it's real, and never fabricates personalization. Generated copy lands as a **draft** — nothing is eligible to send until it's approved.
 
 ## License
 
