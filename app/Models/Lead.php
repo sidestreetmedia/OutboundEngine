@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
@@ -42,6 +43,7 @@ class Lead extends Model
         'source',
         'provider_lead_id',
         'pushed_at',
+        'public_token',
         'lead_import_id',
         'campaign_id',
         'enrichment',
@@ -86,6 +88,12 @@ class Lead extends Model
     public function replies(): HasMany
     {
         return $this->hasMany(Reply::class);
+    }
+
+    /** @return HasOne<Audit, $this> */
+    public function audit(): HasOne
+    {
+        return $this->hasOne(Audit::class)->latestOfMany();
     }
 
     /**
