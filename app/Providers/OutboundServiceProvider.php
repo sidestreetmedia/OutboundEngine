@@ -6,6 +6,10 @@ use App\Contracts\EmailVerifier;
 use App\Contracts\LlmClient;
 use App\Contracts\OutboundProvider;
 use App\Services\Cost\CostMeter;
+use App\Services\Ingestion\Extractors\DocxExtractor;
+use App\Services\Ingestion\Extractors\PdfExtractor;
+use App\Services\Ingestion\Extractors\PlainTextExtractor;
+use App\Services\Ingestion\TextExtractionManager;
 use App\Services\Llm\NullLlmClient;
 use App\Services\Outbound\InstantlyProvider;
 use App\Services\Outbound\LemlistProvider;
@@ -47,6 +51,16 @@ class OutboundServiceProvider extends ServiceProvider
         // Resolving the bare contract gives back the active (default) provider.
         $this->app->bind(OutboundProvider::class, function ($app): OutboundProvider {
             return $app->make(OutboundManager::class)->driver();
+        });
+
+        // Ingestion: the file text extractors behind one manager. IngestionService
+        // depends on this and is auto-resolved by the container.
+        $this->app->singleton(TextExtractionManager::class, function (): TextExtractionManager {
+            return new TextExtractionManager([
+                new PlainTextExtractor(),
+                new PdfExtractor(),
+                new DocxExtractor(),
+            ]);
         });
     }
 }
