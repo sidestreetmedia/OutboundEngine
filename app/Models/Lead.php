@@ -45,6 +45,8 @@ class Lead extends Model
         'pushed_at',
         'public_token',
         'apollo_id',
+        'hubspot_contact_id',
+        'hubspot_synced_at',
         'lead_import_id',
         'campaign_id',
         'enrichment',
@@ -63,6 +65,7 @@ class Lead extends Model
             'pushed_at' => 'datetime',
             'enrichment' => 'array',
             'triggers' => 'array',
+            'hubspot_synced_at' => 'datetime',
             'meta' => 'array',
         ];
     }
