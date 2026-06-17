@@ -39,6 +39,12 @@ class Product extends Model
         return $this->hasMany(Campaign::class);
     }
 
+    /** @return HasMany<ProductSource, $this> */
+    public function sources(): HasMany
+    {
+        return $this->hasMany(ProductSource::class);
+    }
+
     /**
      * Whether the brain builder has produced a structured profile yet.
      */
