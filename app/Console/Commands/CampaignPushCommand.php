@@ -89,6 +89,11 @@ class CampaignPushCommand extends Command
                 $variables["oe_body_{$message->position}"] = (string) $message->body;
             }
 
+            // Per-prospect proof page, if one's been set up — link it from the sequence.
+            if (filled($lead->public_token)) {
+                $variables['oe_landing_url'] = url('/p/' . $lead->public_token);
+            }
+
             $result = $provider->pushLead($campaign->provider_campaign_id, [
                 'email' => $lead->email,
                 'first_name' => $lead->first_name,
