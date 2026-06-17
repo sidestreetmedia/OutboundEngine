@@ -5,6 +5,7 @@ namespace App\Services\Brain;
 use App\Contracts\LlmClient;
 use App\Models\Product;
 use App\Models\ProductSource;
+use App\Services\Brain\Concerns\ParsesLlmJson;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use RuntimeException;
@@ -19,6 +20,8 @@ use RuntimeException;
  */
 class BrainBuilder
 {
+    use ParsesLlmJson;
+
     /** Cap on source characters sent to the model, to bound context + cost. */
     private const MAX_CORPUS_CHARS = 200_000;
 
@@ -130,33 +133,5 @@ class BrainBuilder
         }
 
         return implode("\n", $parts);
-    }
-
-    /**
-     * Pull a JSON object out of the model's reply, tolerating code fences or
-     * stray prose around it.
-     *
-     * @return array<string, mixed>
-     */
-    private function decodeJson(string $raw): array
-    {
-        $text = trim($raw);
-        $text = preg_replace('/^```(?:json)?\s*/i', '', $text) ?? $text;
-        $text = preg_replace('/\s*```$/', '', $text) ?? $text;
-
-        $start = strpos($text, '{');
-        $end = strrpos($text, '}');
-
-        if ($start === false || $end === false || $end < $start) {
-            throw new RuntimeException('The model did not return a JSON object.');
-        }
-
-        $data = json_decode(substr($text, $start, $end - $start + 1), true);
-
-        if (! is_array($data)) {
-            throw new RuntimeException('The model returned invalid JSON: ' . json_last_error_msg());
-        }
-
-        return $data;
     }
 }
