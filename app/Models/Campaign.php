@@ -45,4 +45,10 @@ class Campaign extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+    /** @return HasMany<Lead, $this> */
+    public function leads(): HasMany
+    {
+        return $this->hasMany(Lead::class);
+    }
 }
