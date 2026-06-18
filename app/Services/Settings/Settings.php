@@ -26,6 +26,8 @@ class Settings
         'verify_api_key' => ['label' => 'Email verification API key', 'fallback' => 'outbound.verification.key', 'secret' => true, 'group' => 'Verification'],
         'apollo_api_key' => ['label' => 'Apollo API key', 'fallback' => 'outbound.apollo.key', 'secret' => true, 'group' => 'Enrichment'],
         'hubspot_api_key' => ['label' => 'HubSpot private-app token', 'fallback' => 'outbound.hubspot.key', 'secret' => true, 'group' => 'CRM', 'placeholder' => 'pat-na1-...'],
+        'hubspot_notify_email' => ['label' => 'Email summary to (on add)', 'fallback' => 'outbound.hubspot.notify_email', 'secret' => false, 'group' => 'CRM', 'placeholder' => 'leave blank to turn off'],
+        'hubspot_portal_id' => ['label' => 'HubSpot portal ID (optional)', 'fallback' => 'outbound.hubspot.portal_id', 'secret' => false, 'group' => 'CRM', 'placeholder' => 'your HubSpot account id — links the contact in the email'],
     ];
 
     /** @var array<string, string|null>|null */

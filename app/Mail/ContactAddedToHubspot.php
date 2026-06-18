@@ -23,6 +23,7 @@ class ContactAddedToHubspot extends Mailable
     public function __construct(
         public Lead $lead,
         public ?string $contactId,
+        public ?string $portalId,
         public array $summary,
     ) {
     }
@@ -38,9 +39,8 @@ class ContactAddedToHubspot extends Mailable
 
     public function content(): Content
     {
-        $portal = config('outbound.hubspot.portal_id');
-        $link = ($portal && $this->contactId)
-            ? "https://app.hubspot.com/contacts/{$portal}/record/0-1/{$this->contactId}"
+        $link = ($this->portalId && $this->contactId)
+            ? "https://app.hubspot.com/contacts/{$this->portalId}/record/0-1/{$this->contactId}"
             : null;
 
         return new Content(

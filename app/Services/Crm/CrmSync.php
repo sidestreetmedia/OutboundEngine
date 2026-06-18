@@ -5,6 +5,7 @@ namespace App\Services\Crm;
 use App\Mail\ContactAddedToHubspot;
 use App\Models\Lead;
 use App\Models\Reply;
+use App\Services\Settings\Settings;
 use Illuminate\Support\Facades\Mail;
 
 /**
@@ -15,8 +16,10 @@ use Illuminate\Support\Facades\Mail;
  */
 class CrmSync
 {
-    public function __construct(private readonly HubspotClient $hubspot)
-    {
+    public function __construct(
+        private readonly HubspotClient $hubspot,
+        private readonly Settings $settings,
+    ) {
     }
 
     public function isReady(): bool
@@ -126,14 +129,16 @@ class CrmSync
      */
     private function notify(Lead $lead, ?string $contactId, array $context): void
     {
-        $to = config('outbound.hubspot.notify_email');
+        $to = $this->settings->resolve('hubspot_notify_email');
 
         if (blank($to)) {
             return;
         }
 
+        $portalId = $this->settings->resolve('hubspot_portal_id');
+
         try {
-            Mail::to($to)->send(new ContactAddedToHubspot($lead, $contactId, [
+            Mail::to($to)->send(new ContactAddedToHubspot($lead, $contactId, $portalId, [
                 'campaign' => $context['campaign'],
                 'offer' => $context['offer'],
                 'reply_snippet' => $context['reply_snippet'],

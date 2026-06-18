@@ -69,7 +69,7 @@ return [
     'hubspot' => [
         'key' => env('HUBSPOT_API_KEY'),
         // Email a summary here whenever a contact is added to HubSpot. Blank = off.
-        'notify_email' => env('HUBSPOT_NOTIFY_EMAIL', 'craft@joshkuhn.com'),
+        'notify_email' => env('HUBSPOT_NOTIFY_EMAIL'), // default seeded into settings; blank = off
         // Optional: portal id, used to deep-link the contact record in that email.
         'portal_id' => env('HUBSPOT_PORTAL_ID'),
     ],
