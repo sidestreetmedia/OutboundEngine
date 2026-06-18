@@ -80,11 +80,11 @@ Notes:
 
 API keys and integration settings can be entered two ways:
 
-- **Settings page** — visit `/settings`, enter your keys (Anthropic, Instantly, Lemlist, verification, Apollo, HubSpot). Secrets are encrypted at rest with your `APP_KEY`; a saved value overrides the matching `.env` entry.
+- **Settings page** — visit `/settings` to set everything: the LLM provider + keys (Anthropic for Claude, or Google for free Gemma), sending keys (Instantly, Lemlist), verification, Apollo, and HubSpot (token, the summary-email address, and optional portal id). Secrets are encrypted at rest with your `APP_KEY`; a saved value overrides the matching `.env` entry.
 - **`.env`** — set `ANTHROPIC_API_KEY`, `INSTANTLY_API_KEY`, etc. directly. The settings page falls back to these when nothing is saved.
 - **CLI** — `php artisan settings:set anthropic_api_key sk-ant-...` and `php artisan settings:list`.
 
-The brain and copy generation need an Anthropic key; everything else (ingestion, CSV import, MX verification) runs with no keys and no spend.
+The brain and copy generation need an LLM key — either an Anthropic key (Claude) or, for free, set the **LLM provider** to `google` and drop in a Google AI Studio key to run **Gemma** (`gemma-3-27b-it` by default). Everything else (ingestion, CSV import, MX verification) runs with no keys and no spend.
 
 ## Usage
 

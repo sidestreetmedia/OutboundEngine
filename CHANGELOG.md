@@ -2,6 +2,22 @@
 
 Progress log for OutboundEngine, by phase. Newest first.
 
+## LLM — Google Gemma as a free provider (done)
+
+- **GoogleLlmClient** — Gemma via the Gemini API (free tier), metered at $0 with
+  token counts kept for the dashboard. Pick it with the **LLM provider** setting
+  (`anthropic` | `google`) plus a Google AI Studio key, both on the settings
+  page. Default model `gemma-3-27b-it`; system prompts are folded into the user
+  turn (Gemma has no system role). Switching provider falls back to the null
+  client if the chosen side has no key.
+
+## Settings — HubSpot notify email + portal id in the UI (done)
+
+- The summary-email recipient and the optional portal id moved from `.env`-only
+  onto the settings page (CRM group). Blank means off: the default address is
+  seeded as a saved setting, so clearing the field mutes the emails and editing
+  it redirects them.
+
 ## HubSpot CRM sync — positive replies into your CRM (done)
 
 When a lead replies positively to the current CTA, get them into HubSpot in one
