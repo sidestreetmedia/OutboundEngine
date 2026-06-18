@@ -172,7 +172,7 @@ open http://localhost:8080/wins
 php artisan hubspot:push upstate-dentists        # --all re-pushes, --limit caps
 ```
 
-When a lead replies positively to the current CTA, the **Wins page** (`/wins`) lists them with their reply and the offer they responded to. The per-contact toggle adds them to HubSpot as a contact — keyed on email, so re-pushing updates instead of duplicating — and drops in a note capturing the campaign and CTA. `hubspot:push` does the same in bulk. Set your HubSpot private-app token on the settings page (or `HUBSPOT_API_KEY`); HubSpot has no per-call charge, so this never touches the cost meter.
+When a lead replies positively to the current CTA, the **Wins page** (`/wins`) lists them with their reply and the offer they responded to. The per-contact toggle adds them to HubSpot as a contact — keyed on email, so re-pushing updates instead of duplicating — and drops in a note capturing the campaign and CTA. `hubspot:push` does the same in bulk. Set your HubSpot private-app token on the settings page (or `HUBSPOT_API_KEY`); HubSpot has no per-call charge, so this never touches the cost meter. Every add also emails a summary — who they are, the campaign and CTA they responded to, their reply, and the new HubSpot contact — to `HUBSPOT_NOTIFY_EMAIL` (defaults to craft@joshkuhn.com; leave it blank to turn the emails off).
 
 **Dashboard & experiments**
 

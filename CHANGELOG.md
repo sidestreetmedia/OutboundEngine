@@ -21,6 +21,10 @@ move, with the context of what they responded to.
   token set and the toggles disable and point to settings.
 - **hubspot:push** — the same push in bulk, optionally scoped to a campaign;
   `--all` re-pushes, `--limit` caps. `hubspot_api_key` added to settings + config.
+- **Summary email** — every add (toggle or command) emails a recap to
+  `HUBSPOT_NOTIFY_EMAIL` (default craft@joshkuhn.com; blank turns it off): the
+  contact, campaign + CTA, their reply, and the new HubSpot contact. Best-effort,
+  so a mail failure never fails the push.
 
 ## Apollo increment — automatic lead sourcing (done)
 
