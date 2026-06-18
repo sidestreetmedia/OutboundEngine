@@ -58,23 +58,81 @@ All seven phases are built, plus Apollo as an automatic lead source (sourcing + 
 
 ¹ Enrichment and trigger detection need paid external data (Apollo), so they ship with the Apollo increment rather than as free stubs — consistent with the no-autonomous-spend rule. Done as of the Apollo increment.
 
-## Local setup
+## Installation & setup
 
-Requires Docker. The stack is `app` (php-fpm), `web` (nginx), `queue`, `scheduler`, `mysql`, and `redis`.
+Two ways to run it: **Docker** (recommended — the full stack, closest to production) or a **local PHP** setup. Pick one, then add your keys.
+
+### Prerequisites
+
+- **Docker path:** Docker Engine 24+ with Compose v2, and Git.
+- **Local path:** PHP 8.3+ (extensions: `pdo_mysql`, `redis`, `bcmath`, `intl`, `zip`, `gd`, `mbstring`), Composer 2, Node 20+, and a MySQL 8 + Redis you can point at.
+
+### 1. Get the code
 
 ```bash
+git clone https://github.com/sidestreetmedia/OutboundEngine.git
+cd OutboundEngine
 cp .env.example .env
-docker compose up -d --build      # first boot installs vendor/ automatically
+```
+
+### 2a. Run with Docker (recommended)
+
+```bash
+docker compose up -d --build       # first boot runs composer install for you
 docker compose exec app php artisan key:generate
 docker compose exec app php artisan migrate
 ```
 
-Then open **http://localhost:8080** (change the port with `OE_HTTP_PORT` in `.env`).
+The stack is `app` (php-fpm), `web` (nginx), `queue`, `scheduler`, `mysql`, and `redis`. Service names match `.env`, and MySQL/Redis come up with working local defaults, so there's nothing else to wire. Open **http://localhost:8080/settings** to add keys, then **/dashboard** for the funnel (change the port with `OE_HTTP_PORT`).
 
-Notes:
-- First boot is slow — the image builds and `composer install` runs once. The `queue` and `scheduler` containers wait for that to finish before starting, so a few seconds of "waiting" in the logs is expected.
+- First boot is slow — the image builds and `composer install` runs once. `queue` and `scheduler` wait for `app` to be healthy (i.e. `vendor/` present), so a few seconds of "waiting" in the logs is normal.
+- The product UI (`/dashboard`, `/settings`, `/wins`, `/p/{token}`) is self-contained and needs no front-end build. Only the stock landing page at `/` uses Vite — run `docker compose exec app sh -c "npm install && npm run build"` if you want it; otherwise go straight to `/settings`.
 - `vendor/`, `node_modules/`, and `.env` are never committed or baked into the image.
-- The same `Dockerfile` produces a standalone image for deploying anywhere — no local-only assumptions.
+
+### 2b. Run locally (without Docker)
+
+Point `DB_HOST`/`REDIS_HOST` in `.env` at your MySQL and Redis, then:
+
+```bash
+composer setup     # installs deps, writes .env, generates APP_KEY, migrates, builds assets
+composer dev       # serves app + queue worker + log tail + vite together, on :8000
+```
+
+`composer setup` is a one-shot installer; `composer dev` runs everything at once. Prefer to run the pieces yourself? `php artisan serve`, `php artisan queue:work`, and `php artisan schedule:work`.
+
+### 3. Add your keys
+
+Open `/settings` and add at least an LLM key — an **Anthropic** key for Claude, or switch the **LLM provider** to `google` and paste a free **Google AI Studio** key to run Gemma. Sending (Instantly/Lemlist), Apollo, and HubSpot keys live here too, and a saved value overrides `.env`. Nothing else is required to start — ingestion, CSV import, and MX verification run with no keys and no spend. Full list under [Configuration & keys](#configuration--keys).
+
+### 4. Run your first campaign
+
+Prefix each command with `docker compose exec app` if you're on Docker.
+
+```bash
+php artisan product:create "Web Care" --one-liner="Done-for-you website maintenance"
+php artisan product:ingest-url web-care https://yoursite.com
+php artisan product:build-brain web-care
+php artisan product:build-library web-care
+php artisan leads:import ~/prospects.csv --campaign=web-care
+php artisan leads:verify
+php artisan campaign:create "Upstate Dentists" --product=web-care
+php artisan sequence:create upstate-dentists --steps=3
+php artisan campaign:generate upstate-dentists
+php artisan messages:review upstate-dentists
+php artisan messages:approve --all --campaign=upstate-dentists
+```
+
+Then connect a sending platform and push (`campaign:connect-provider` -> `campaign:push`) and watch replies come back. The full command reference is in [Usage](#usage).
+
+### Verify it's working
+
+- `docker compose ps` shows every service up (the `app` health check passes once `vendor/` is installed).
+- `php artisan migrate:status` lists the migrations as run.
+- `/dashboard` loads — empty until you import leads, then it fills in as the funnel moves.
+
+### Deploying
+
+The same `Dockerfile` produces a production image. For a real deployment: set `APP_ENV=production` and `APP_DEBUG=false`, generate a fresh `APP_KEY`, point at managed MySQL + Redis, and on each release run `php artisan migrate --force` and cache config/routes (`php artisan config:cache && php artisan route:cache`). Keep the `queue` and `scheduler` processes running alongside the web container.
 
 ## Configuration & keys
 
