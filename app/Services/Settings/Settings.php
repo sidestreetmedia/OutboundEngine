@@ -19,6 +19,8 @@ class Settings
     public const DEFINITIONS = [
         'anthropic_api_key' => ['label' => 'Anthropic API key', 'fallback' => 'outbound.llm.key', 'secret' => true, 'group' => 'AI', 'placeholder' => 'sk-ant-...'],
         'llm_model' => ['label' => 'LLM model', 'fallback' => 'outbound.llm.model', 'secret' => false, 'group' => 'AI', 'placeholder' => 'claude-sonnet-4-6'],
+        'llm_provider' => ['label' => 'LLM provider', 'fallback' => 'outbound.llm.provider', 'secret' => false, 'group' => 'AI', 'placeholder' => 'anthropic or google'],
+        'google_api_key' => ['label' => 'Google AI (Gemma) API key', 'fallback' => 'outbound.llm.google_key', 'secret' => true, 'group' => 'AI', 'placeholder' => 'AIza... — free from Google AI Studio'],
         'outbound_provider' => ['label' => 'Default sending platform', 'fallback' => 'outbound.provider', 'secret' => false, 'group' => 'Sending', 'placeholder' => 'instantly'],
         'instantly_api_key' => ['label' => 'Instantly API key', 'fallback' => 'outbound.providers.instantly.key', 'secret' => true, 'group' => 'Sending'],
         'lemlist_api_key' => ['label' => 'Lemlist API key', 'fallback' => 'outbound.providers.lemlist.key', 'secret' => true, 'group' => 'Sending'],

@@ -28,7 +28,10 @@ return [
     | Reads your decks/site and writes personalized copy.
     */
     'llm' => [
+        // 'anthropic' (Claude) or 'google' (Gemma, free on the Gemini API free tier).
+        'provider' => env('OE_LLM_PROVIDER', 'anthropic'),
         'key' => env('ANTHROPIC_API_KEY'),
+        'google_key' => env('GEMINI_API_KEY'),
         'model' => env('OE_LLM_MODEL', 'claude-sonnet-4-6'),
     ],
 

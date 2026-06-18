@@ -13,6 +13,7 @@ use App\Services\Ingestion\Extractors\PlainTextExtractor;
 use App\Services\Ingestion\HtmlToText;
 use App\Services\Ingestion\TextExtractionManager;
 use App\Services\Llm\AnthropicClient;
+use App\Services\Llm\GoogleLlmClient;
 use App\Services\Llm\NullLlmClient;
 use App\Services\Outbound\InstantlyProvider;
 use App\Services\Outbound\LemlistProvider;
@@ -39,10 +40,31 @@ class OutboundServiceProvider extends ServiceProvider
         // Runtime settings: values saved via the settings page/CLI override .env.
         $this->app->singleton(Settings::class);
 
-        // LLM: the real Anthropic client once a key is available (saved setting
-        // or env), else the null stub so the app still boots without credentials.
+        // LLM: pick the provider from settings — Anthropic (Claude) by default,
+        // or Google (Gemma, free on the Gemini API). Falls back to the null stub
+        // when the chosen provider has no key, so the app still boots.
         $this->app->bind(LlmClient::class, function ($app): LlmClient {
             $settings = $app->make(Settings::class);
+            $provider = strtolower((string) ($settings->resolve('llm_provider') ?: 'anthropic'));
+
+            if ($provider === 'google') {
+                $key = $settings->resolve('google_api_key');
+
+                if (blank($key)) {
+                    return new NullLlmClient();
+                }
+
+                $model = $settings->resolve('llm_model');
+
+                // If the model field still holds a Claude model, use the Gemma
+                // default so switching provider alone is enough to try it out.
+                if (blank($model) || str_starts_with((string) $model, 'claude')) {
+                    $model = GoogleLlmClient::DEFAULT_MODEL;
+                }
+
+                return new GoogleLlmClient($app->make(CostMeter::class), $key, $model);
+            }
+
             $key = $settings->resolve('anthropic_api_key');
 
             if (blank($key)) {
